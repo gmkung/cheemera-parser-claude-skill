@@ -125,27 +125,41 @@ Patterns and strategies for converting different types of statements into Cheeme
 
 **Pattern**: "X and Y cannot both be true"
 
-**Structure**: Use `MUTUAL_EXCLUSION` type with `Never` modal
+**CRITICAL**: For MUTUAL_EXCLUSION, put mutually exclusive properties in separate **antecedent arrays**, NOT in consequences. Consequences should be empty `[]`.
+
+**Structure**:
 ```json
 {
   "scenario": {
     "type": "MUTUAL_EXCLUSION",
-    "consequences": [
-      {
-        "modal": "Never",
-        "properties": [
-          {"valence": true, "sentence": "X"},
-          {"valence": true, "sentence": "Y"}
-        ]
-      }
-    ],
-    "antecedents": [[]]
+    "consequences": [],
+    "antecedents": [
+      [{"valence": true, "sentence": "X"}],
+      [{"valence": true, "sentence": "Y"}]
+    ]
   }
 }
 ```
 
+**How it works**: The server automatically converts this to:
+- "If X is true → Y is NOT true"
+- "If Y is true → X is NOT true"
+
 **Examples**:
 - "A door cannot be both open and closed"
+  ```json
+  {
+    "scenario": {
+      "type": "MUTUAL_EXCLUSION",
+      "consequences": [],
+      "antecedents": [
+        [{"valence": true, "sentence": "the door is open"}],
+        [{"valence": true, "sentence": "the door is closed"}]
+      ]
+    }
+  }
+  ```
+
 - "A user cannot be both active and deleted"
 - "Transaction cannot be both pending and completed"
 
@@ -153,27 +167,41 @@ Patterns and strategies for converting different types of statements into Cheeme
 
 **Pattern**: "If X is true, Y must also be true" (bidirectional dependency)
 
-**Structure**: Use `MUTUAL_INCLUSION` type with `Always` modal
+**CRITICAL**: For MUTUAL_INCLUSION, put mutually inclusive properties in separate **antecedent arrays**, NOT in consequences. Consequences should be empty `[]`.
+
+**Structure**:
 ```json
 {
   "scenario": {
     "type": "MUTUAL_INCLUSION",
-    "consequences": [
-      {
-        "modal": "Always",
-        "properties": [
-          {"valence": true, "sentence": "X"},
-          {"valence": true, "sentence": "Y"}
-        ]
-      }
-    ],
-    "antecedents": [[]]
+    "consequences": [],
+    "antecedents": [
+      [{"valence": true, "sentence": "X"}],
+      [{"valence": true, "sentence": "Y"}]
+    ]
   }
 }
 ```
 
+**How it works**: The server automatically converts this to:
+- "If X is true → Y is true"
+- "If Y is true → X is true"
+
 **Examples**:
 - "If a user has premium features, they must have an active subscription"
+  ```json
+  {
+    "scenario": {
+      "type": "MUTUAL_INCLUSION",
+      "consequences": [],
+      "antecedents": [
+        [{"valence": true, "sentence": "user has premium features"}],
+        [{"valence": true, "sentence": "user has active subscription"}]
+      ]
+    }
+  }
+  ```
+
 - "Married couples must both have spouse records"
 
 ## Pattern 8: Chained Logic

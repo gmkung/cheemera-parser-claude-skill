@@ -258,79 +258,95 @@ Break down complex statements into atomic beliefs:
 }
 ```
 
-### Multiple Conditions (AND)
+### Mutual Exclusion
 
-**Input**: "If A and B are true, then C must be true"
+**Input**: "A transaction cannot be both completed and pending."
 
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["A is true", "B is true"],
-      "Consequences": ["C is true"]
-    }
-  ]
-}
-```
-
-### Multiple Consequences
-
-**Input**: "If the user clicks submit, validate the form and send the data to the server"
+**Important**: For MUTUAL_EXCLUSION, put the mutually exclusive properties in separate **antecedent arrays**, NOT in consequences. The server will automatically convert this into IF_THEN rules.
 
 **Output**:
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": ["the user clicks submit"],
-      "Consequences": [
-        "validate the form",
-        "send the data to the server"
-      ]
+      "scenario": {
+        "type": "MUTUAL_EXCLUSION",
+        "consequences": [],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the transaction is completed"
+            }
+          ],
+          [
+            {
+              "valence": true,
+              "sentence": "the transaction is pending"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "Transaction Rules",
+      "originatingRuleSystemUuid": "uuid-transactions"
     }
-  ]
+  ],
+  "beliefSetName": "Transaction Rules",
+  "beliefSetOwner": "System",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-### Policy Rules
+**How it works**: The server converts this to:
+- "If transaction is completed → transaction is NOT pending"
+- "If transaction is pending → transaction is NOT completed"
 
-**Input**: "Users must be authenticated to access protected resources. Authenticated users have a valid session token."
+### Mutual Inclusion
+
+**Input**: "If a user has premium features, they must have an active subscription" (bidirectional requirement)
+
+**Important**: For MUTUAL_INCLUSION, put the mutually inclusive properties in separate **antecedent arrays**, NOT in consequences.
 
 **Output**:
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": ["user wants to access protected resources"],
-      "Consequences": ["user must be authenticated"]
-    },
-    {
-      "Antecedents": ["user is authenticated"],
-      "Consequences": ["user has a valid session token"]
+      "scenario": {
+        "type": "MUTUAL_INCLUSION",
+        "consequences": [],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "user has premium features"
+            }
+          ],
+          [
+            {
+              "valence": true,
+              "sentence": "user has active subscription"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "Subscription Rules",
+      "originatingRuleSystemUuid": "uuid-subscription"
     }
-  ]
+  ],
+  "beliefSetName": "Subscription Rules",
+  "beliefSetOwner": "System",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-### Negation and Constraints
-
-**Input**: "If the balance is below zero, the account is overdrawn and transactions are blocked"
-
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["balance is below zero"],
-      "Consequences": [
-        "account is overdrawn",
-        "transactions are blocked"
-      ]
-    }
-  ]
-}
-```
+**How it works**: The server converts this to:
+- "If user has premium features → user has active subscription"
+- "If user has active subscription → user has premium features"
 
 ## Workflow
 

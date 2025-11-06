@@ -292,6 +292,8 @@ All examples follow this structure:
 
 **Input**: "A transaction cannot be both completed and pending."
 
+**Important**: For MUTUAL_EXCLUSION, the mutually exclusive properties go in separate **antecedent arrays**, NOT in consequences.
+
 **Output**:
 ```json
 {
@@ -299,22 +301,21 @@ All examples follow this structure:
     {
       "scenario": {
         "type": "MUTUAL_EXCLUSION",
-        "consequences": [
-          {
-            "modal": "Never",
-            "properties": [
-              {
-                "valence": true,
-                "sentence": "the transaction is completed"
-              },
-              {
-                "valence": true,
-                "sentence": "the transaction is pending"
-              }
-            ]
-          }
-        ],
-        "antecedents": [[]]
+        "consequences": [],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the transaction is completed"
+            }
+          ],
+          [
+            {
+              "valence": true,
+              "sentence": "the transaction is pending"
+            }
+          ]
+        ]
       },
       "beliefUniqueId": "belief-001",
       "originatingRuleSystemName": "Transaction States",
@@ -327,6 +328,10 @@ All examples follow this structure:
   "blindReferenceExternalIdArray": []
 }
 ```
+
+**How the server processes this**: The MUTUAL_EXCLUSION belief is automatically converted to IF_THEN rules:
+- "If transaction is completed → transaction is NOT pending"
+- "If transaction is pending → transaction is NOT completed"
 
 ## Tips for Creating Belief Sets
 
