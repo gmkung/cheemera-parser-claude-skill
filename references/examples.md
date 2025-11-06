@@ -1,300 +1,344 @@
 # Cheemera Belief Set Examples
 
-Comprehensive examples of parsing text into Cheemera belief sets across different domains.
+Examples of parsing text into Cheemera belief sets using the correct server-compatible format.
 
-## Legal Reasoning
+## Format Reference
 
-### Contract Law Example
+All examples follow this structure:
+- Field order: `scenario` → `beliefUniqueId` → `originatingRuleSystemName` → `originatingRuleSystemUuid`
+- In scenario: `type` → `consequences` → `antecedents`
+- In properties: `valence` → `sentence`
+- In consequences: `modal` → `properties`
 
-**Input Text**:
-"A valid contract requires an offer, acceptance, and consideration. If all three elements are present, the contract is legally binding. Minors cannot enter into legally binding contracts."
+## Example 1: Simple Business Rule
 
-**Cheemera Output**:
+**Input**: "If a customer has a premium account, they get free shipping."
+
+**Output**:
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": [
-        "there is an offer",
-        "there is acceptance",
-        "there is consideration"
-      ],
-      "Consequences": [
-        "there is a valid contract"
-      ]
-    },
-    {
-      "Antecedents": [
-        "there is a valid contract"
-      ],
-      "Consequences": [
-        "the contract is legally binding"
-      ]
-    },
-    {
-      "Antecedents": [
-        "the party is a minor"
-      ],
-      "Consequences": [
-        "the party cannot enter into legally binding contracts"
-      ]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "the customer gets free shipping"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the customer has a premium account"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "E-commerce Rules",
+      "originatingRuleSystemUuid": "uuid-ecommerce"
     }
-  ]
+  ],
+  "beliefSetName": "E-commerce Rules",
+  "beliefSetOwner": "System",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-## Business Rules
+## Example 2: Multiple Conditions (AND Logic)
 
-### E-commerce Example
+**Input**: "If a user is authenticated AND has admin privileges, they can access the admin panel."
 
-**Input Text**:
-"Free shipping applies to orders over $50. If a customer has a premium membership, they get free shipping on all orders. Orders placed before 2 PM are shipped same day. Refunds are only available within 30 days of purchase."
-
-**Cheemera Output**:
+**Output**:
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": ["order total is over $50"],
-      "Consequences": ["free shipping applies"]
-    },
-    {
-      "Antecedents": ["customer has premium membership"],
-      "Consequences": ["free shipping applies to the order"]
-    },
-    {
-      "Antecedents": ["order is placed before 2 PM"],
-      "Consequences": ["order is shipped same day"]
-    },
-    {
-      "Antecedents": [
-        "refund is requested",
-        "purchase was within the last 30 days"
-      ],
-      "Consequences": ["refund is available"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "the user can access the admin panel"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the user is authenticated"
+            },
+            {
+              "valence": true,
+              "sentence": "the user has admin privileges"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "Access Control",
+      "originatingRuleSystemUuid": "uuid-access"
     }
-  ]
+  ],
+  "beliefSetName": "Access Control Rules",
+  "beliefSetOwner": "Security Team",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-## Software Engineering
+## Example 3: Multiple Consequences
 
-### Authentication System
+**Input**: "If payment is successful, send confirmation email and update order status."
 
-**Input Text**:
-"When a user logs in, verify their credentials against the database. If credentials are valid, create a session token and store it in the cache. If the session token exists and is not expired, the user is authenticated. Failed login attempts exceeding 5 times lock the account for 30 minutes."
-
-**Cheemera Output**:
+**Output**:
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": ["user logs in"],
-      "Consequences": ["verify credentials against database"]
-    },
-    {
-      "Antecedents": ["credentials are valid"],
-      "Consequences": [
-        "create a session token",
-        "store session token in cache"
-      ]
-    },
-    {
-      "Antecedents": [
-        "session token exists",
-        "session token is not expired"
-      ],
-      "Consequences": ["user is authenticated"]
-    },
-    {
-      "Antecedents": ["failed login attempts exceed 5"],
-      "Consequences": [
-        "account is locked",
-        "account remains locked for 30 minutes"
-      ]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "send confirmation email"
+              },
+              {
+                "valence": true,
+                "sentence": "update order status"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "payment is successful"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "Payment Processing",
+      "originatingRuleSystemUuid": "uuid-payment"
     }
-  ]
+  ],
+  "beliefSetName": "Payment Processing Rules",
+  "beliefSetOwner": "Payment Team",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-## Scientific Principles
+## Example 4: Negation (Using valence: false)
 
-### Physics Example
+**Input**: "If the user is not verified, they cannot make purchases."
 
-**Input Text**:
-"Objects at rest remain at rest unless acted upon by an external force. Objects in motion continue in uniform motion unless acted upon by an external force. The acceleration of an object is proportional to the net force acting on it and inversely proportional to its mass."
-
-**Cheemera Output**:
+**Output**:
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": [
-        "object is at rest",
-        "no external force acts on the object"
-      ],
-      "Consequences": ["object remains at rest"]
-    },
-    {
-      "Antecedents": [
-        "object is in motion",
-        "no external force acts on the object"
-      ],
-      "Consequences": ["object continues in uniform motion"]
-    },
-    {
-      "Antecedents": [
-        "net force acts on object",
-        "object has mass"
-      ],
-      "Consequences": [
-        "object accelerates",
-        "acceleration is proportional to net force",
-        "acceleration is inversely proportional to mass"
-      ]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": false,
+                "sentence": "the user can make purchases"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": false,
+              "sentence": "the user is verified"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "User Verification",
+      "originatingRuleSystemUuid": "uuid-verification"
     }
-  ]
+  ],
+  "beliefSetName": "User Verification Rules",
+  "beliefSetOwner": "Compliance Team",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-## Healthcare Policy
+## Example 5: Multiple Beliefs in One Set
 
-### Medical Records Example
+**Input**:
+"Users must be 18 or older to register. Registered users can post comments. Users under 18 cannot register."
 
-**Input Text**:
-"Patient consent is required to share medical records with third parties. Emergency situations allow access to medical records without consent. Healthcare providers must document all access to patient records. Records must be retained for a minimum of 7 years."
-
-**Cheemera Output**:
+**Output**:
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": [
-        "medical records need to be shared with third party",
-        "not an emergency situation"
-      ],
-      "Consequences": ["patient consent is required"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "the user can register"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the user is 18 or older"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "Age Verification",
+      "originatingRuleSystemUuid": "uuid-age"
     },
     {
-      "Antecedents": ["situation is an emergency"],
-      "Consequences": ["medical records can be accessed without consent"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "the user can post comments"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the user is registered"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-002",
+      "originatingRuleSystemName": "Age Verification",
+      "originatingRuleSystemUuid": "uuid-age"
     },
     {
-      "Antecedents": ["patient record is accessed"],
-      "Consequences": ["healthcare provider must document the access"]
-    },
-    {
-      "Antecedents": ["medical record exists"],
-      "Consequences": ["record must be retained for minimum 7 years"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": false,
+                "sentence": "the user can register"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the user is under 18"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-003",
+      "originatingRuleSystemName": "Age Verification",
+      "originatingRuleSystemUuid": "uuid-age"
     }
-  ]
+  ],
+  "beliefSetName": "Age Verification Rules",
+  "beliefSetOwner": "Legal Team",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-## Game Logic
+## Example 6: Mutual Exclusion
 
-### RPG Mechanics Example
+**Input**: "A transaction cannot be both completed and pending."
 
-**Input Text**:
-"Players with strength above 15 can equip heavy armor. Heavy armor reduces agility by 3 points. If agility drops below 5, the player cannot dodge attacks. Critical hits occur when attack roll is 18 or higher and the target is surprised."
-
-**Cheemera Output**:
+**Output**:
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": ["player strength is above 15"],
-      "Consequences": ["player can equip heavy armor"]
-    },
-    {
-      "Antecedents": ["player equips heavy armor"],
-      "Consequences": ["player agility is reduced by 3 points"]
-    },
-    {
-      "Antecedents": ["player agility is below 5"],
-      "Consequences": ["player cannot dodge attacks"]
-    },
-    {
-      "Antecedents": [
-        "attack roll is 18 or higher",
-        "target is surprised"
-      ],
-      "Consequences": ["attack is a critical hit"]
+      "scenario": {
+        "type": "MUTUAL_EXCLUSION",
+        "consequences": [
+          {
+            "modal": "Never",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "the transaction is completed"
+              },
+              {
+                "valence": true,
+                "sentence": "the transaction is pending"
+              }
+            ]
+          }
+        ],
+        "antecedents": [[]]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "Transaction States",
+      "originatingRuleSystemUuid": "uuid-transactions"
     }
-  ]
+  ],
+  "beliefSetName": "Transaction State Rules",
+  "beliefSetOwner": "System",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-## Environmental Rules
+## Tips for Creating Belief Sets
 
-### Climate Control Example
-
-**Input Text**:
-"When temperature exceeds 75°F, activate cooling system. If humidity is above 60%, increase ventilation. When both temperature is high and humidity is high, activate dehumidifier before cooling. Energy saving mode disables cooling when no occupancy is detected for 30 minutes."
-
-**Cheemera Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["temperature exceeds 75°F"],
-      "Consequences": ["activate cooling system"]
-    },
-    {
-      "Antecedents": ["humidity is above 60%"],
-      "Consequences": ["increase ventilation"]
-    },
-    {
-      "Antecedents": [
-        "temperature is high",
-        "humidity is high"
-      ],
-      "Consequences": [
-        "activate dehumidifier",
-        "dehumidifier activates before cooling"
-      ]
-    },
-    {
-      "Antecedents": [
-        "energy saving mode is enabled",
-        "no occupancy detected for 30 minutes"
-      ],
-      "Consequences": ["disable cooling system"]
-    }
-  ]
-}
-```
-
-## Financial Rules
-
-### Investment Portfolio Example
-
-**Input Text**:
-"High-risk investments should not exceed 20% of total portfolio for conservative investors. Bonds are considered low-risk investments. If market volatility index exceeds 30, reduce equity exposure by 10%. Rebalancing is required when any asset class deviates more than 5% from target allocation."
-
-**Cheemera Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": [
-        "investor is conservative",
-        "investment is high-risk"
-      ],
-      "Consequences": ["investment should not exceed 20% of portfolio"]
-    },
-    {
-      "Antecedents": ["investment is a bond"],
-      "Consequences": ["investment is low-risk"]
-    },
-    {
-      "Antecedents": ["market volatility index exceeds 30"],
-      "Consequences": ["reduce equity exposure by 10%"]
-    },
-    {
-      "Antecedents": ["asset class deviates more than 5% from target allocation"],
-      "Consequences": ["portfolio rebalancing is required"]
-    }
-  ]
-}
-```
+1. **Unique IDs**: Use sequential IDs like "belief-001", "belief-002", or generate UUIDs
+2. **System UUID**: Use the same UUID for all beliefs in a set that come from the same rule system
+3. **Valence**:
+   - `true` for positive statements ("user is verified")
+   - `false` for negative statements ("user is not verified")
+4. **Modal**:
+   - `"Always"` for IF_THEN rules (if X then Y always happens)
+   - `"Never"` for MUTUAL_EXCLUSION (X and Y never both true)
+5. **Scenario Types**:
+   - `"IF_THEN"` - Standard conditional rules
+   - `"MUTUAL_EXCLUSION"` - Things that cannot coexist
+   - `"MUTUAL_INCLUSION"` - Things that must coexist

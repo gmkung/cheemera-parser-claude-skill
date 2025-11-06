@@ -20,28 +20,148 @@ A **Belief Set** is a JSON object containing:
 
 ### Belief Structure
 
-Each **Belief** represents a logical rule with:
-- `Antecedents`: Array of strings representing conditions (the "IF" statements)
-- `Consequences`: Array of strings representing outcomes (the "THEN" statements)
+Each **Belief** represents a logical rule with these fields IN THIS EXACT ORDER:
+1. `scenario`: Object containing the logical structure
+   - `type`: Scenario type - "IF_THEN", "MUTUAL_EXCLUSION", or "MUTUAL_INCLUSION"
+   - `consequences`: Array of Consequence objects (outcomes) - MUST come before antecedents
+   - `antecedents`: Array of arrays of Property objects (conditions)
+2. `beliefUniqueId`: Unique identifier (UUID format recommended)
+3. `originatingRuleSystemName`: Name of the source system or domain
+4. `originatingRuleSystemUuid`: UUID of the originating rule system
 
-**Key principle**: Both antecedents and consequences are written in plain human language as strings. The engine does not depend on specific data types or predefined structures—anything that can be expressed as a string can be a belief.
+**Property** structure (fields IN THIS EXACT ORDER):
+1. `valence`: Boolean (true for positive, false for negative)
+2. `sentence`: String representing the statement in natural language
 
-## JSON Format
+**Consequence** structure (fields IN THIS EXACT ORDER):
+1. `modal`: "Always" or "Never"
+2. `properties`: Array of Property objects
+
+**Key principle**: Statements are written in plain human language. The engine does not depend on specific data types—anything that can be expressed as a string can be a belief. FIELD ORDER MATTERS - always follow the exact order specified above.
+
+## JSON Schema
+
+The following JSON Schema defines the exact structure required:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["beliefs", "beliefSetName", "beliefSetOwner", "beliefSetVersion", "blindReferenceExternalIdArray"],
+  "properties": {
+    "beliefs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scenario", "beliefUniqueId", "originatingRuleSystemName", "originatingRuleSystemUuid"],
+        "properties": {
+          "scenario": {
+            "type": "object",
+            "required": ["type", "consequences", "antecedents"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["IF_THEN", "MUTUAL_EXCLUSION", "MUTUAL_INCLUSION"]
+              },
+              "consequences": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["modal", "properties"],
+                  "properties": {
+                    "modal": {
+                      "type": "string",
+                      "enum": ["Always", "Never"]
+                    },
+                    "properties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["valence", "sentence"],
+                        "properties": {
+                          "valence": { "type": "boolean" },
+                          "sentence": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "antecedents": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["valence", "sentence"],
+                    "properties": {
+                      "valence": { "type": "boolean" },
+                      "sentence": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "beliefUniqueId": { "type": "string" },
+          "originatingRuleSystemName": { "type": "string" },
+          "originatingRuleSystemUuid": { "type": "string" }
+        }
+      }
+    },
+    "beliefSetName": { "type": "string" },
+    "beliefSetOwner": { "type": "string" },
+    "beliefSetVersion": { "type": "string" },
+    "blindReferenceExternalIdArray": { "type": "array" }
+  }
+}
+```
+
+## JSON Format Example
 
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": [
-        "condition 1",
-        "condition 2"
-      ],
-      "Consequences": [
-        "outcome 1",
-        "outcome 2"
-      ]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "outcome 1"
+              },
+              {
+                "valence": true,
+                "sentence": "outcome 2"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "condition 1"
+            },
+            {
+              "valence": true,
+              "sentence": "condition 2"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "uuid-1",
+      "originatingRuleSystemName": "System Name",
+      "originatingRuleSystemUuid": "uuid-system"
     }
-  ]
+  ],
+  "beliefSetName": "Belief Set Name",
+  "beliefSetOwner": "Owner Name",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
@@ -104,10 +224,37 @@ Break down complex statements into atomic beliefs:
 {
   "beliefs": [
     {
-      "Antecedents": ["it rains"],
-      "Consequences": ["the ground gets wet"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "the ground gets wet"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "it rains"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "Weather Rules",
+      "originatingRuleSystemUuid": "uuid-weather"
     }
-  ]
+  ],
+  "beliefSetName": "Weather Rules",
+  "beliefSetOwner": "System",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
@@ -237,24 +384,55 @@ Beliefs can be listed in any order. The engine will determine the correct logica
 
 ## Output Format
 
-Always output a single JSON object with this exact structure:
+Always output a single JSON object with this EXACT structure and field order:
 
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": ["condition"],
-      "Consequences": ["outcome"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "outcome"
+              }
+            ]
+          }
+        ],
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "condition"
+            }
+          ]
+        ]
+      },
+      "beliefUniqueId": "belief-001",
+      "originatingRuleSystemName": "System Name",
+      "originatingRuleSystemUuid": "uuid-system"
     }
-  ]
+  ],
+  "beliefSetName": "Belief Set Name",
+  "beliefSetOwner": "Owner Name",
+  "beliefSetVersion": "1.0",
+  "blindReferenceExternalIdArray": []
 }
 ```
 
-Ensure the JSON is:
-- Valid and parseable
-- Properly formatted with correct syntax
+CRITICAL Requirements:
+- Field order MUST match exactly as shown above
+- "scenario" field comes FIRST in Belief object
+- "consequences" comes BEFORE "antecedents" in scenario
+- "valence" comes BEFORE "sentence" in Property objects
+- "modal" comes BEFORE "properties" in Consequence objects
+- Valid and parseable JSON
 - Uses double quotes for strings
-- Has proper array and object structure
+- Proper array and object structure
 
 ## Additional Resources
 

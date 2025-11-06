@@ -1,425 +1,311 @@
-# Common Parsing Patterns and Edge Cases
+# Common Parsing Patterns
 
-Guide for handling various statement types and edge cases when parsing into Cheemera belief sets.
+Patterns and strategies for converting different types of statements into Cheemera belief sets.
 
-## Pattern: Implicit Conditionals
+## Pattern 1: Simple If-Then
 
-When conditions are implied but not explicitly stated.
+**Pattern**: "If X, then Y"
 
-**Input**: "Authenticated users can view their profile."
-
-**Analysis**: The implicit condition is "user wants to view their profile"
-
-**Output**:
+**Structure**:
 ```json
 {
-  "beliefs": [
-    {
-      "Antecedents": [
-        "user is authenticated",
-        "user wants to view their profile"
-      ],
-      "Consequences": ["user can view their profile"]
-    }
+  "scenario": {
+    "type": "IF_THEN",
+    "consequences": [{ "modal": "Always", "properties": [{"valence": true, "sentence": "Y"}] }],
+    "antecedents": [[{"valence": true, "sentence": "X"}]]
+  }
+}
+```
+
+**Examples**:
+- "If it rains, the ground is wet"
+- "If user clicks button, form submits"
+- "If temperature exceeds 100°C, water boils"
+
+## Pattern 2: Compound Conditions (AND)
+
+**Pattern**: "If X AND Y AND Z, then outcome"
+
+**Structure**: All conditions go in the SAME antecedent array
+```json
+{
+  "antecedents": [
+    [
+      {"valence": true, "sentence": "X"},
+      {"valence": true, "sentence": "Y"},
+      {"valence": true, "sentence": "Z"}
+    ]
   ]
 }
 ```
 
-## Pattern: Universal Statements
+**Example**: "If user is logged in AND has permission AND resource exists, grant access"
 
-Statements that apply to all instances.
+## Pattern 3: OR Logic (Multiple Paths)
 
-**Input**: "All employees must complete security training."
+**Pattern**: "If X OR Y, then outcome"
 
-**Output**:
+**Strategy**: Create separate beliefs for each path
+
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": ["person is an employee"],
-      "Consequences": ["person must complete security training"]
-    }
-  ]
-}
-```
-
-## Pattern: Negative Conditions
-
-Handling negation in statements.
-
-**Input**: "If the user is not logged in, redirect to login page."
-
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["user is not logged in"],
-      "Consequences": ["redirect user to login page"]
-    }
-  ]
-}
-```
-
-## Pattern: Disjunctions (OR Conditions)
-
-When multiple alternative conditions can lead to the same outcome.
-
-**Input**: "Premium features are available if the user has a paid subscription or is in a free trial period."
-
-**Approach**: Create separate beliefs for each alternative.
-
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["user has paid subscription"],
-      "Consequences": ["premium features are available to user"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "outcome"}]}],
+        "antecedents": [[{"valence": true, "sentence": "X"}]]
+      },
+      "beliefUniqueId": "belief-001",
+      ...
     },
     {
-      "Antecedents": ["user is in free trial period"],
-      "Consequences": ["premium features are available to user"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "outcome"}]}],
+        "antecedents": [[{"valence": true, "sentence": "Y"}]]
+      },
+      "beliefUniqueId": "belief-002",
+      ...
     }
   ]
 }
 ```
 
-## Pattern: Temporal Conditions
+**Example**: "If user is admin OR user is owner, allow deletion"
+→ Two beliefs: one for admin, one for owner
 
-Statements involving time-based logic.
+## Pattern 4: Negation
 
-**Input**: "After three failed attempts, the system locks the account for 15 minutes."
+**Pattern**: "If NOT X, then Y" or "If X, then NOT Y"
 
-**Output**:
+**Strategy**: Use `valence: false`
+
+**Antecedent negation**:
 ```json
 {
-  "beliefs": [
+  "antecedents": [[{"valence": false, "sentence": "X"}]]
+}
+```
+
+**Consequence negation**:
+```json
+{
+  "consequences": [{"modal": "Always", "properties": [{"valence": false, "sentence": "Y"}]}]
+}
+```
+
+**Examples**:
+- "If user is not verified, deny access" → antecedent: `{"valence": false, "sentence": "user is verified"}`
+- "If account is frozen, user cannot withdraw" → consequence: `{"valence": false, "sentence": "user can withdraw"}`
+
+## Pattern 5: Multiple Consequences
+
+**Pattern**: "If X, then Y and Z and W"
+
+**Structure**: All consequences in the SAME properties array
+```json
+{
+  "consequences": [
     {
-      "Antecedents": ["there have been three failed login attempts"],
-      "Consequences": [
-        "system locks the account",
-        "account is locked for 15 minutes"
+      "modal": "Always",
+      "properties": [
+        {"valence": true, "sentence": "Y"},
+        {"valence": true, "sentence": "Z"},
+        {"valence": true, "sentence": "W"}
       ]
     }
   ]
 }
 ```
 
-## Pattern: Hierarchical Relationships
+**Example**: "If order confirmed, send email AND update inventory AND charge payment"
 
-When outcomes depend on a chain of conditions.
+## Pattern 6: Mutual Exclusion
 
-**Input**: "To deploy to production, code must pass all tests. Tests can only run if the build succeeds. The build requires all dependencies to be installed."
+**Pattern**: "X and Y cannot both be true"
 
-**Output**:
+**Structure**: Use `MUTUAL_EXCLUSION` type with `Never` modal
+```json
+{
+  "scenario": {
+    "type": "MUTUAL_EXCLUSION",
+    "consequences": [
+      {
+        "modal": "Never",
+        "properties": [
+          {"valence": true, "sentence": "X"},
+          {"valence": true, "sentence": "Y"}
+        ]
+      }
+    ],
+    "antecedents": [[]]
+  }
+}
+```
+
+**Examples**:
+- "A door cannot be both open and closed"
+- "A user cannot be both active and deleted"
+- "Transaction cannot be both pending and completed"
+
+## Pattern 7: Mutual Inclusion
+
+**Pattern**: "If X is true, Y must also be true" (bidirectional dependency)
+
+**Structure**: Use `MUTUAL_INCLUSION` type with `Always` modal
+```json
+{
+  "scenario": {
+    "type": "MUTUAL_INCLUSION",
+    "consequences": [
+      {
+        "modal": "Always",
+        "properties": [
+          {"valence": true, "sentence": "X"},
+          {"valence": true, "sentence": "Y"}
+        ]
+      }
+    ],
+    "antecedents": [[]]
+  }
+}
+```
+
+**Examples**:
+- "If a user has premium features, they must have an active subscription"
+- "Married couples must both have spouse records"
+
+## Pattern 8: Chained Logic
+
+**Pattern**: "If X then Y, and if Y then Z"
+
+**Strategy**: Create separate beliefs that chain together
+
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": ["all dependencies are installed"],
-      "Consequences": ["build can be executed"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "Y"}]}],
+        "antecedents": [[{"valence": true, "sentence": "X"}]]
+      },
+      "beliefUniqueId": "belief-001",
+      ...
     },
     {
-      "Antecedents": ["build succeeds"],
-      "Consequences": ["tests can run"]
-    },
-    {
-      "Antecedents": ["all tests pass"],
-      "Consequences": ["code can be deployed to production"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "Z"}]}],
+        "antecedents": [[{"valence": true, "sentence": "Y"}]]
+      },
+      "beliefUniqueId": "belief-002",
+      ...
     }
   ]
 }
 ```
 
-## Pattern: State Transitions
+The inference engine will automatically deduce that X → Z
 
-Describing changes in state.
+## Pattern 9: Constraints and Violations
 
-**Input**: "When the order is confirmed, its status changes from pending to processing. After payment is received, status changes from processing to completed."
+**Pattern**: Rules that define violations or forbidden states
 
-**Output**:
+**Strategy**: Use consequences that indicate constraint violation
+
+```json
+{
+  "scenario": {
+    "type": "IF_THEN",
+    "consequences": [
+      {
+        "modal": "Always",
+        "properties": [
+          {"valence": true, "sentence": "the constraint is violated"}
+        ]
+      }
+    ],
+    "antecedents": [[
+      {"valence": true, "sentence": "invalid condition"}
+    ]]
+  }
+}
+```
+
+**Example**: "If user tries to withdraw more than balance, transaction is invalid"
+→ consequence: `{"valence": true, "sentence": "the transaction is invalid"}`
+
+## Pattern 10: Hierarchical Rules
+
+**Pattern**: Category → Subcategory → Specific rules
+
+**Strategy**: Build belief hierarchy through chained implications
+
 ```json
 {
   "beliefs": [
     {
-      "Antecedents": [
-        "order is confirmed",
-        "order status is pending"
-      ],
-      "Consequences": ["order status changes to processing"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "entity is a vehicle"}]}],
+        "antecedents": [[{"valence": true, "sentence": "entity is a car"}]]
+      },
+      "beliefUniqueId": "belief-001",
+      ...
     },
     {
-      "Antecedents": [
-        "payment is received",
-        "order status is processing"
-      ],
-      "Consequences": ["order status changes to completed"]
+      "scenario": {
+        "type": "IF_THEN",
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "entity requires fuel"}]}],
+        "antecedents": [[{"valence": true, "sentence": "entity is a vehicle"}]]
+      },
+      "beliefUniqueId": "belief-002",
+      ...
     }
   ]
 }
 ```
 
-## Pattern: Quantitative Thresholds
+This creates: car → vehicle → requires fuel
 
-Handling numeric comparisons and ranges.
+## Edge Cases
 
-**Input**: "Items weighing over 50 pounds require special handling. Items between 20-50 pounds need standard packaging. Items under 20 pounds can use economy packaging."
-
-**Output**:
+### Empty Antecedents
+For universal rules with no conditions, use empty antecedent array:
 ```json
 {
-  "beliefs": [
-    {
-      "Antecedents": ["item weighs over 50 pounds"],
-      "Consequences": ["item requires special handling"]
-    },
-    {
-      "Antecedents": [
-        "item weighs 20 pounds or more",
-        "item weighs 50 pounds or less"
-      ],
-      "Consequences": ["item needs standard packaging"]
-    },
-    {
-      "Antecedents": ["item weighs under 20 pounds"],
-      "Consequences": ["item can use economy packaging"]
-    }
-  ]
+  "antecedents": [[]]
 }
 ```
 
-## Pattern: Exception Handling
+### Complex Mixed Logic
+"If (X AND Y) OR (Z AND W), then outcome"
 
-Statements that define exceptions to rules.
+Strategy: Split into two separate beliefs:
+1. Belief 1: If X AND Y, then outcome
+2. Belief 2: If Z AND W, then outcome
 
-**Input**: "All purchases require payment, except for promotional items which are free."
+### Temporal Logic
+"After X happens, then Y"
 
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": [
-        "item is purchased",
-        "item is not promotional"
-      ],
-      "Consequences": ["payment is required"]
-    },
-    {
-      "Antecedents": ["item is promotional"],
-      "Consequences": [
-        "item is free",
-        "payment is not required"
-      ]
-    }
-  ]
-}
-```
+Strategy: Represent as standard IF_THEN:
+- Antecedent: "X has happened"
+- Consequence: "Y occurs"
 
-## Pattern: Reciprocal Relationships
+## Anti-Patterns to Avoid
 
-When relationships work in both directions.
+❌ **Don't nest logic within sentences**:
+- Bad: "If user is admin or owner, allow access"
+- Good: Two separate beliefs for admin and owner
 
-**Input**: "Project managers can assign tasks to team members. Team members can request tasks from project managers."
+❌ **Don't mix positive and negative unnecessarily**:
+- Instead of: "user is not inactive"
+- Use: "user is active" with appropriate valence
 
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": [
-        "user is a project manager",
-        "recipient is a team member"
-      ],
-      "Consequences": ["user can assign tasks to recipient"]
-    },
-    {
-      "Antecedents": [
-        "user is a team member",
-        "recipient is a project manager"
-      ],
-      "Consequences": ["user can request tasks from recipient"]
-    }
-  ]
-}
-```
+❌ **Don't create circular dependencies**:
+- Avoid: X → Y and Y → X (unless truly mutual inclusion)
 
-## Pattern: Prerequisite Chains
-
-Multiple prerequisites that must be satisfied in order.
-
-**Input**: "Before submitting an article, it must be reviewed. Before review, it must be written. Before writing, a topic must be approved."
-
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["topic is approved"],
-      "Consequences": ["article can be written"]
-    },
-    {
-      "Antecedents": ["article is written"],
-      "Consequences": ["article can be reviewed"]
-    },
-    {
-      "Antecedents": ["article is reviewed"],
-      "Consequences": ["article can be submitted"]
-    }
-  ]
-}
-```
-
-## Pattern: Permission and Capability
-
-Distinguishing between permission and ability.
-
-**Input**: "Users can edit their own posts. Moderators can edit any post."
-
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": [
-        "user wants to edit a post",
-        "user is the author of the post"
-      ],
-      "Consequences": ["user can edit the post"]
-    },
-    {
-      "Antecedents": [
-        "user is a moderator",
-        "there is a post to edit"
-      ],
-      "Consequences": ["user can edit the post"]
-    }
-  ]
-}
-```
-
-## Edge Case: Tautologies
-
-Statements that are always true should still be captured.
-
-**Input**: "All valid emails must contain an @ symbol."
-
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["email is valid"],
-      "Consequences": ["email contains @ symbol"]
-    }
-  ]
-}
-```
-
-## Edge Case: Contradictions
-
-If source text contains contradictions, capture both as separate beliefs.
-
-**Input**: "Standard users cannot delete posts. Standard users can delete their own posts."
-
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": [
-        "user is a standard user",
-        "post is not owned by user"
-      ],
-      "Consequences": ["user cannot delete the post"]
-    },
-    {
-      "Antecedents": [
-        "user is a standard user",
-        "post is owned by user"
-      ],
-      "Consequences": ["user can delete the post"]
-    }
-  ]
-}
-```
-
-## Edge Case: Ambiguous Pronouns
-
-Clarify pronouns in the parsed output.
-
-**Input**: "When a customer places an order, send them a confirmation email."
-
-**Output**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["customer places an order"],
-      "Consequences": ["send confirmation email to the customer"]
-    }
-  ]
-}
-```
-
-## Edge Case: Lists and Enumerations
-
-Handle lists consistently.
-
-**Input**: "Valid payment methods include credit card, PayPal, and bank transfer."
-
-**Approach**: Create beliefs for each item or group them based on context.
-
-**Output (Option 1 - Atomic)**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": ["payment method is credit card"],
-      "Consequences": ["payment method is valid"]
-    },
-    {
-      "Antecedents": ["payment method is PayPal"],
-      "Consequences": ["payment method is valid"]
-    },
-    {
-      "Antecedents": ["payment method is bank transfer"],
-      "Consequences": ["payment method is valid"]
-    }
-  ]
-}
-```
-
-**Output (Option 2 - Grouped)**:
-```json
-{
-  "beliefs": [
-    {
-      "Antecedents": [
-        "payment method is one of: credit card, PayPal, or bank transfer"
-      ],
-      "Consequences": ["payment method is valid"]
-    }
-  ]
-}
-```
-
-## Best Practice: Consistency
-
-When parsing related statements, maintain consistent phrasing:
-
-**Good**:
-- "user is authenticated" (used throughout)
-- "user has valid credentials" (used throughout)
-
-**Avoid**:
-- Mixing "user is authenticated" and "the user has been authenticated" and "authentication successful"
-
-## Best Practice: Granularity
-
-Choose appropriate level of detail:
-
-**Too Granular**: Breaking "if A and B then C" into separate beliefs for every possible combination
-**Too Coarse**: Combining unrelated rules into single complex belief
-**Just Right**: Each belief represents one logical relationship clearly
+❌ **Don't encode multiple unrelated rules in one belief**:
+- Split them into separate beliefs with unique IDs

@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cheemera.com/schemas/beliefset.json",
+  "title": "Cheemera Belief Set",
+  "description": "Schema for Cheemera belief sets compatible with the deCheem inference engine",
+  "type": "object",
+  "required": ["beliefs", "beliefSetName", "beliefSetOwner", "beliefSetVersion", "blindReferenceExternalIdArray"],
+  "properties": {
+    "beliefs": {
+      "type": "array",
+      "description": "Array of belief objects representing logical rules",
+      "items": {
+        "type": "object",
+        "required": ["scenario", "beliefUniqueId", "originatingRuleSystemName", "originatingRuleSystemUuid"],
+        "properties": {
+          "scenario": {
+            "type": "object",
+            "description": "The logical structure of the belief",
+            "required": ["type", "consequences", "antecedents"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of logical scenario",
+                "enum": ["IF_THEN", "MUTUAL_EXCLUSION", "MUTUAL_INCLUSION"]
+              },
+              "consequences": {
+                "type": "array",
+                "description": "Array of consequence objects (outcomes)",
+                "items": {
+                  "type": "object",
+                  "required": ["modal", "properties"],
+                  "properties": {
+                    "modal": {
+                      "type": "string",
+                      "description": "Modal qualifier for the consequence",
+                      "enum": ["Always", "Never"]
+                    },
+                    "properties": {
+                      "type": "array",
+                      "description": "Array of property objects",
+                      "items": {
+                        "type": "object",
+                        "required": ["valence", "sentence"],
+                        "properties": {
+                          "valence": {
+                            "type": "boolean",
+                            "description": "True for positive assertion, false for negative"
+                          },
+                          "sentence": {
+                            "type": "string",
+                            "description": "Natural language statement"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "antecedents": {
+                "type": "array",
+                "description": "Array of arrays of property objects (conditions)",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["valence", "sentence"],
+                    "properties": {
+                      "valence": {
+                        "type": "boolean",
+                        "description": "True for positive assertion, false for negative"
+                      },
+                      "sentence": {
+                        "type": "string",
+                        "description": "Natural language statement"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "beliefUniqueId": {
+            "type": "string",
+            "description": "Unique identifier for this belief"
+          },
+          "originatingRuleSystemName": {
+            "type": "string",
+            "description": "Name of the source system or domain"
+          },
+          "originatingRuleSystemUuid": {
+            "type": "string",
+            "description": "UUID of the originating rule system"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "beliefSetName": {
+      "type": "string",
+      "description": "Name of this belief set"
+    },
+    "beliefSetOwner": {
+      "type": "string",
+      "description": "Owner or creator of this belief set"
+    },
+    "beliefSetVersion": {
+      "type": "string",
+      "description": "Version identifier for this belief set"
+    },
+    "blindReferenceExternalIdArray": {
+      "type": "array",
+      "description": "Array of external reference IDs"
+    }
+  },
+  "additionalProperties": false
+}
