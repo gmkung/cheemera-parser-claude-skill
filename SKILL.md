@@ -386,6 +386,7 @@ Break down complex statements into atomic beliefs:
   3.  'The weather will be rainy.'
   4.  'The piece of land is privately owned.'
 - Each sentence in a good belief set should be used in as many beliefs as possible, but not more than necessary.
+- **Maintain consistent noun phrase references**: Once you establish a noun phrase (e.g., "The entity is a robot"), use that same noun phrase consistently throughout related beliefs, and also in the adjectival phrases. Don't switch between "the robot", "the entity", "it" - always use the standardized reference established in your antecedents. Where possible, use the most generic word possible, and use a separate sentence to reflect what that generic word refers to (e.g. "The person accuses the entity" and "The entity is a robot").
 
 - When generating a belief set:
   1. **Read and understand** First read the belief set in it's entirety,
