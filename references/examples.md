@@ -5,6 +5,7 @@ Examples of parsing text into Cheemera belief sets using the correct server-comp
 ## Format Reference
 
 All examples follow this structure:
+
 - Field order: `scenario` → `beliefUniqueId` → `originatingRuleSystemName` → `originatingRuleSystemUuid`
 - In scenario: `type` → `consequences` → `antecedents`
 - In properties: `valence` → `sentence`
@@ -15,12 +16,21 @@ All examples follow this structure:
 **Input**: "If a customer has a premium account, they get free shipping."
 
 **Output**:
+
 ```json
 {
   "beliefs": [
     {
       "scenario": {
         "type": "IF_THEN",
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the customer has a premium account"
+            }
+          ]
+        ],
         "consequences": [
           {
             "modal": "Always",
@@ -31,14 +41,6 @@ All examples follow this structure:
               }
             ]
           }
-        ],
-        "antecedents": [
-          [
-            {
-              "valence": true,
-              "sentence": "the customer has a premium account"
-            }
-          ]
         ]
       },
       "beliefUniqueId": "belief-001",
@@ -58,23 +60,14 @@ All examples follow this structure:
 **Input**: "If a user is authenticated AND has admin privileges, they can access the admin panel."
 
 **Output**:
+
 ```json
 {
   "beliefs": [
     {
       "scenario": {
         "type": "IF_THEN",
-        "consequences": [
-          {
-            "modal": "Always",
-            "properties": [
-              {
-                "valence": true,
-                "sentence": "the user can access the admin panel"
-              }
-            ]
-          }
-        ],
+
         "antecedents": [
           [
             {
@@ -86,6 +79,17 @@ All examples follow this structure:
               "sentence": "the user has admin privileges"
             }
           ]
+        ],
+        "consequences": [
+          {
+            "modal": "Always",
+            "properties": [
+              {
+                "valence": true,
+                "sentence": "the user can access the admin panel"
+              }
+            ]
+          }
         ]
       },
       "beliefUniqueId": "belief-001",
@@ -105,12 +109,21 @@ All examples follow this structure:
 **Input**: "If payment is successful, send confirmation email and update order status."
 
 **Output**:
+
 ```json
 {
   "beliefs": [
     {
       "scenario": {
         "type": "IF_THEN",
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "payment is successful"
+            }
+          ]
+        ],
         "consequences": [
           {
             "modal": "Always",
@@ -125,14 +138,6 @@ All examples follow this structure:
               }
             ]
           }
-        ],
-        "antecedents": [
-          [
-            {
-              "valence": true,
-              "sentence": "payment is successful"
-            }
-          ]
         ]
       },
       "beliefUniqueId": "belief-001",
@@ -152,12 +157,22 @@ All examples follow this structure:
 **Input**: "If the user is not verified, they cannot make purchases."
 
 **Output**:
+
 ```json
 {
   "beliefs": [
     {
       "scenario": {
         "type": "IF_THEN",
+
+        "antecedents": [
+          [
+            {
+              "valence": false,
+              "sentence": "the user is verified"
+            }
+          ]
+        ],
         "consequences": [
           {
             "modal": "Always",
@@ -168,14 +183,6 @@ All examples follow this structure:
               }
             ]
           }
-        ],
-        "antecedents": [
-          [
-            {
-              "valence": false,
-              "sentence": "the user is verified"
-            }
-          ]
         ]
       },
       "beliefUniqueId": "belief-001",
@@ -196,12 +203,21 @@ All examples follow this structure:
 "Users must be 18 or older to register. Registered users can post comments. Users under 18 cannot register."
 
 **Output**:
+
 ```json
 {
   "beliefs": [
     {
       "scenario": {
         "type": "IF_THEN",
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the user is 18 or older"
+            }
+          ]
+        ],
         "consequences": [
           {
             "modal": "Always",
@@ -212,14 +228,6 @@ All examples follow this structure:
               }
             ]
           }
-        ],
-        "antecedents": [
-          [
-            {
-              "valence": true,
-              "sentence": "the user is 18 or older"
-            }
-          ]
         ]
       },
       "beliefUniqueId": "belief-001",
@@ -229,6 +237,14 @@ All examples follow this structure:
     {
       "scenario": {
         "type": "IF_THEN",
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the user is registered"
+            }
+          ]
+        ],
         "consequences": [
           {
             "modal": "Always",
@@ -239,14 +255,6 @@ All examples follow this structure:
               }
             ]
           }
-        ],
-        "antecedents": [
-          [
-            {
-              "valence": true,
-              "sentence": "the user is registered"
-            }
-          ]
         ]
       },
       "beliefUniqueId": "belief-002",
@@ -256,6 +264,14 @@ All examples follow this structure:
     {
       "scenario": {
         "type": "IF_THEN",
+        "antecedents": [
+          [
+            {
+              "valence": true,
+              "sentence": "the user is under 18"
+            }
+          ]
+        ],
         "consequences": [
           {
             "modal": "Always",
@@ -266,14 +282,6 @@ All examples follow this structure:
               }
             ]
           }
-        ],
-        "antecedents": [
-          [
-            {
-              "valence": true,
-              "sentence": "the user is under 18"
-            }
-          ]
         ]
       },
       "beliefUniqueId": "belief-003",
@@ -292,23 +300,28 @@ All examples follow this structure:
 
 **Input**: "A transaction cannot be both completed and pending."
 
-**Important**: For MUTUAL_EXCLUSION, the mutually exclusive properties go in separate **antecedent arrays**, NOT in consequences.
+**Important**: For MUTUAL_EXCLUSION and MUTUAL_INCLUSION, the mutually exclusive/incusive properties go in separate **antecedent arrays**, and there are no consequences.
 
 **Output**:
+
 ```json
 {
   "beliefs": [
     {
       "scenario": {
         "type": "MUTUAL_EXCLUSION",
-        "consequences": [],
+
         "antecedents": [
           [
             {
               "valence": true,
               "sentence": "the transaction is completed"
+            }, // AND
+            {
+              "valence": true,
+              "sentence": "the transaction is completed"
             }
-          ],
+          ], // OR
           [
             {
               "valence": true,
@@ -330,6 +343,7 @@ All examples follow this structure:
 ```
 
 **How the server processes this**: The MUTUAL_EXCLUSION belief is automatically converted to IF_THEN rules:
+
 - "If transaction is completed → transaction is NOT pending"
 - "If transaction is pending → transaction is NOT completed"
 

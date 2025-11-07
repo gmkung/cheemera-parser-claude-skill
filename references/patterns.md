@@ -7,17 +7,24 @@ Patterns and strategies for converting different types of statements into Cheeme
 **Pattern**: "If X, then Y"
 
 **Structure**:
+
 ```json
 {
   "scenario": {
     "type": "IF_THEN",
-    "consequences": [{ "modal": "Always", "properties": [{"valence": true, "sentence": "Y"}] }],
-    "antecedents": [[{"valence": true, "sentence": "X"}]]
+    "antecedents": [[{ "valence": true, "sentence": "X" }]],
+    "consequences": [
+      {
+        "modal": "Always",
+        "properties": [{ "valence": true, "sentence": "Y" }]
+      }
+    ]
   }
 }
 ```
 
 **Examples**:
+
 - "If it rains, the ground is wet"
 - "If user clicks button, form submits"
 - "If temperature exceeds 100°C, water boils"
@@ -27,13 +34,14 @@ Patterns and strategies for converting different types of statements into Cheeme
 **Pattern**: "If X AND Y AND Z, then outcome"
 
 **Structure**: All conditions go in the SAME antecedent array
+
 ```json
 {
   "antecedents": [
     [
-      {"valence": true, "sentence": "X"},
-      {"valence": true, "sentence": "Y"},
-      {"valence": true, "sentence": "Z"}
+      { "valence": true, "sentence": "X" },
+      { "valence": true, "sentence": "Y" },
+      { "valence": true, "sentence": "Z" }
     ]
   ]
 }
@@ -53,8 +61,8 @@ Patterns and strategies for converting different types of statements into Cheeme
     {
       "scenario": {
         "type": "IF_THEN",
-        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "outcome"}]}],
-        "antecedents": [[{"valence": true, "sentence": "X"}]]
+        "antecedents": [[{"valence": true, "sentence": "X"}]],
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "outcome"}]}]
       },
       "beliefUniqueId": "belief-001",
       ...
@@ -62,8 +70,8 @@ Patterns and strategies for converting different types of statements into Cheeme
     {
       "scenario": {
         "type": "IF_THEN",
-        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "outcome"}]}],
-        "antecedents": [[{"valence": true, "sentence": "Y"}]]
+        "antecedents": [[{"valence": true, "sentence": "Y"}]],
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "outcome"}]}]
       },
       "beliefUniqueId": "belief-002",
       ...
@@ -82,20 +90,25 @@ Patterns and strategies for converting different types of statements into Cheeme
 **Strategy**: Use `valence: false`
 
 **Antecedent negation**:
+
 ```json
 {
-  "antecedents": [[{"valence": false, "sentence": "X"}]]
+  "antecedents": [[{ "valence": false, "sentence": "X" }]]
 }
 ```
 
 **Consequence negation**:
+
 ```json
 {
-  "consequences": [{"modal": "Always", "properties": [{"valence": false, "sentence": "Y"}]}]
+  "consequences": [
+    { "modal": "Always", "properties": [{ "valence": false, "sentence": "Y" }] }
+  ]
 }
 ```
 
 **Examples**:
+
 - "If user is not verified, deny access" → antecedent: `{"valence": false, "sentence": "user is verified"}`
 - "If account is frozen, user cannot withdraw" → consequence: `{"valence": false, "sentence": "user can withdraw"}`
 
@@ -104,15 +117,16 @@ Patterns and strategies for converting different types of statements into Cheeme
 **Pattern**: "If X, then Y and Z and W"
 
 **Structure**: All consequences in the SAME properties array
+
 ```json
 {
   "consequences": [
     {
       "modal": "Always",
       "properties": [
-        {"valence": true, "sentence": "Y"},
-        {"valence": true, "sentence": "Z"},
-        {"valence": true, "sentence": "W"}
+        { "valence": true, "sentence": "Y" },
+        { "valence": true, "sentence": "Z" },
+        { "valence": true, "sentence": "W" }
       ]
     }
   ]
@@ -128,33 +142,35 @@ Patterns and strategies for converting different types of statements into Cheeme
 **CRITICAL**: For MUTUAL_EXCLUSION, put mutually exclusive properties in separate **antecedent arrays**, NOT in consequences. Consequences should be empty `[]`.
 
 **Structure**:
+
 ```json
 {
   "scenario": {
     "type": "MUTUAL_EXCLUSION",
-    "consequences": [],
     "antecedents": [
-      [{"valence": true, "sentence": "X"}],
-      [{"valence": true, "sentence": "Y"}]
+      [{ "valence": true, "sentence": "X" }],
+      [{ "valence": true, "sentence": "Y" }]
     ]
   }
 }
 ```
 
 **How it works**: The server automatically converts this to:
+
 - "If X is true → Y is NOT true"
 - "If Y is true → X is NOT true"
 
 **Examples**:
+
 - "A door cannot be both open and closed"
+
   ```json
   {
     "scenario": {
       "type": "MUTUAL_EXCLUSION",
-      "consequences": [],
       "antecedents": [
-        [{"valence": true, "sentence": "the door is open"}],
-        [{"valence": true, "sentence": "the door is closed"}]
+        [{ "valence": true, "sentence": "the door is open" }],
+        [{ "valence": true, "sentence": "the door is closed" }]
       ]
     }
   }
@@ -167,36 +183,38 @@ Patterns and strategies for converting different types of statements into Cheeme
 
 **Pattern**: "If X is true, Y must also be true" (bidirectional dependency)
 
-**CRITICAL**: For MUTUAL_INCLUSION, put mutually inclusive properties in separate **antecedent arrays**, NOT in consequences. Consequences should be empty `[]`.
+**CRITICAL**: For MUTUAL_INCLUSION, put mutually inclusive properties in separate **antecedent arrays**, NOT in consequences. Consequences should be left out.
 
 **Structure**:
+
 ```json
 {
   "scenario": {
     "type": "MUTUAL_INCLUSION",
-    "consequences": [],
     "antecedents": [
-      [{"valence": true, "sentence": "X"}],
-      [{"valence": true, "sentence": "Y"}]
+      [{ "valence": true, "sentence": "X" }],
+      [{ "valence": true, "sentence": "Y" }]
     ]
   }
 }
 ```
 
 **How it works**: The server automatically converts this to:
+
 - "If X is true → Y is true"
 - "If Y is true → X is true"
 
 **Examples**:
+
 - "If a user has premium features, they must have an active subscription"
+
   ```json
   {
     "scenario": {
       "type": "MUTUAL_INCLUSION",
-      "consequences": [],
       "antecedents": [
-        [{"valence": true, "sentence": "user has premium features"}],
-        [{"valence": true, "sentence": "user has active subscription"}]
+        [{ "valence": true, "sentence": "user has premium features" }],
+        [{ "valence": true, "sentence": "user has active subscription" }]
       ]
     }
   }
@@ -216,8 +234,9 @@ Patterns and strategies for converting different types of statements into Cheeme
     {
       "scenario": {
         "type": "IF_THEN",
-        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "Y"}]}],
-        "antecedents": [[{"valence": true, "sentence": "X"}]]
+        "antecedents": [[{"valence": true, "sentence": "X"}]],
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "Y"}]}]
+
       },
       "beliefUniqueId": "belief-001",
       ...
@@ -225,8 +244,9 @@ Patterns and strategies for converting different types of statements into Cheeme
     {
       "scenario": {
         "type": "IF_THEN",
-        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "Z"}]}],
-        "antecedents": [[{"valence": true, "sentence": "Y"}]]
+        "antecedents": [[{"valence": true, "sentence": "Y"}]],
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "Z"}]}]
+
       },
       "beliefUniqueId": "belief-002",
       ...
@@ -247,17 +267,15 @@ The inference engine will automatically deduce that X → Z
 {
   "scenario": {
     "type": "IF_THEN",
+    "antecedents": [[{ "valence": true, "sentence": "invalid condition" }]],
     "consequences": [
       {
         "modal": "Always",
         "properties": [
-          {"valence": true, "sentence": "the constraint is violated"}
+          { "valence": true, "sentence": "the constraint is violated" }
         ]
       }
-    ],
-    "antecedents": [[
-      {"valence": true, "sentence": "invalid condition"}
-    ]]
+    ]
   }
 }
 ```
@@ -277,8 +295,9 @@ The inference engine will automatically deduce that X → Z
     {
       "scenario": {
         "type": "IF_THEN",
-        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "entity is a vehicle"}]}],
-        "antecedents": [[{"valence": true, "sentence": "entity is a car"}]]
+        "antecedents": [[{"valence": true, "sentence": "entity is a car"}]],
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "entity is a vehicle"}]}]
+
       },
       "beliefUniqueId": "belief-001",
       ...
@@ -286,8 +305,9 @@ The inference engine will automatically deduce that X → Z
     {
       "scenario": {
         "type": "IF_THEN",
-        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "entity requires fuel"}]}],
-        "antecedents": [[{"valence": true, "sentence": "entity is a vehicle"}]]
+        "antecedents": [[{"valence": true, "sentence": "entity is a vehicle"}]],
+        "consequences": [{"modal": "Always", "properties": [{"valence": true, "sentence": "entity requires fuel"}]}]
+
       },
       "beliefUniqueId": "belief-002",
       ...
@@ -300,40 +320,72 @@ This creates: car → vehicle → requires fuel
 
 ## Edge Cases
 
-### Empty Antecedents
-For universal rules with no conditions, use empty antecedent array:
+### Universal/Unconditional Rules
+
+**IMPORTANT**: Do NOT use empty antecedents `[[]]`. Every belief must have at least one antecedent property.
+
+For universal rules that are always true (unconditional facts), use a universal context antecedent:
+
 ```json
 {
-  "antecedents": [[]]
+  "antecedents": [
+    [
+      {
+        "valence": true,
+        "sentence": "this is the current context"
+      }
+    ]
+  ]
 }
 ```
 
+Examples of universal antecedents:
+
+- "this is the current context"
+- "we are in scenario X"
+- "this is a valid state"
+- Any appropriate contextual statement that's always assumed true
+
 ### Complex Mixed Logic
+
 "If (X AND Y) OR (Z AND W), then outcome"
 
 Strategy: Split into two separate beliefs:
+
 1. Belief 1: If X AND Y, then outcome
 2. Belief 2: If Z AND W, then outcome
 
 ### Temporal Logic
+
 "After X happens, then Y"
 
 Strategy: Represent as standard IF_THEN:
+
 - Antecedent: "X has happened"
 - Consequence: "Y occurs"
 
 ## Anti-Patterns to Avoid
 
+❌ **NEVER use empty antecedents**:
+
+- Bad: `"antecedents": [[]]`
+- Good: Use a universal context antecedent like `"this is the current context"`
+- Every belief MUST have at least one antecedent property
+
 ❌ **Don't nest logic within sentences**:
+
 - Bad: "If user is admin or owner, allow access"
 - Good: Two separate beliefs for admin and owner
 
 ❌ **Don't mix positive and negative unnecessarily**:
+
 - Instead of: "user is not inactive"
 - Use: "user is active" with appropriate valence
 
 ❌ **Don't create circular dependencies**:
+
 - Avoid: X → Y and Y → X (unless truly mutual inclusion)
 
 ❌ **Don't encode multiple unrelated rules in one belief**:
+
 - Split them into separate beliefs with unique IDs
